@@ -8,7 +8,7 @@ namespace lexer {
         tEof = 0,
         tInteger,
         tString,
-        tJumpTarget,
+        tLabel,
         tSubName,
         tGeneralReg,
         tSpecialReg,
@@ -21,15 +21,16 @@ namespace lexer {
     {
     public:
         explicit Lexer(std::istream *stream = &std::cin) 
-            : m_stream(stream) {}
+            : m_stream(stream), m_currentLine(1) {}
    
         Token lex();
 
         const std::string &text() { return m_text; }
         int integer() { return m_integer; }
+        int currentLine() { return m_currentLine; }
 
         void setStream(std::istream *stream)
-        { m_stream = stream; }
+        { m_currentLine = 1; m_stream = stream; }
         std::istream *stream() { return m_stream; }
 
     private:
@@ -41,6 +42,7 @@ namespace lexer {
         }
 
         std::istream *m_stream;
+        int m_currentLine;
         Token m_currentToken;
         int m_integer;
         std::string m_text;

@@ -30,6 +30,7 @@ Token Lexer::lex()
                     ;
 
             case '\n':
+                m_currentLine++;
             return tNewLine;
 
             case ',':
@@ -38,7 +39,7 @@ Token Lexer::lex()
             // Jump target
             case '.':
                copyToText();
-            return tJumpTarget;
+            return tLabel;
 
             case '"':
                m_text = "";
@@ -57,7 +58,7 @@ Token Lexer::lex()
                 }
         }
 
-        if (std::isalpha(ch)) {
+        if (std::isalpha(ch) || ch == '_') {
             m_stream->putback(ch);
             char nc = copyToText();
             if (nc == ':')
