@@ -13,7 +13,7 @@
 #include <cstddef>
 #include <cassert>
 
-#include "opcode.hxx"
+#include "opcodes.hxx"
 
 using namespace std;
 
