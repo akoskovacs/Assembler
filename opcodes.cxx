@@ -8,17 +8,11 @@
 using namespace opcode;
 using namespace ast;
 using namespace std;
-namespace {
-    union Converter {
-        int16_t ui16;
-        int8_t ui8[2];
-    };
-}
 
-vector<char> *Instruction::encode(Mnemonic *mne)
+void encode(Mnemonic *mne)
 {
     int op_ind;
-    unsigned char opcode = 0;
+    uint8_t opcode = 0;
     vector<char> *inst = new vector<char>;
     vector<Value *> *args = mne->arguments;
 
@@ -26,50 +20,61 @@ vector<char> *Instruction::encode(Mnemonic *mne)
         op_ind = findOpcode(mne->name);
     } catch (...) {
         std::cerr << "Error: Instruction \'" << mne->name << "\' is unknown.\n";
-        return inst; // TODO: Terminate
+        return; // TODO: Terminate
     }
 
     if (instruction_set[op_ind].op_args > mne->arguments->size()) {
         std::cerr << "Error: To many arguments for \'" << mne->name << "\' instruction.\n";
-        return inst; // TODO: Terminate
+        return; // TODO: Terminate
     }
 
     opcode = instruction_set[op_ind].op_code;
+    if (args->at(0)->isRegister())
+        opcode |= 0x20;
+
     if (args->at(1)->isRegister())
         opcode |= 0x40;
-
-    if (args->at(1)->isRegister())
+    else if (args->at(1)->isIntermediate())
         opcode |= 0x80;
+    else
+        opcode |= 0xC0;
 
     inst->push_back(opcode);
-    vector<Value *>::const_iterator it;
-    for (it = args->begin(); it != args->end(); it++) {
-        switch ((*it)->type()) {
-            case Integer:
+    for (int i = 0; i < 2; i++) {
+        switch (args[i]) {
+            case Value::Integer:
                 if (instruction_set[op_ind].op_arg_size == 2) {
-                    long_arg.ui16 = (int16_t)(*it)->integer();
-                    inst->push_back((int8_t)long_arg.ui8[1]);
-                    inst->push_back((int8_t)long_arg.ui8[0]);
+                    
                 } else {
                     inst->push_back((int8_t)(*it)->integer());
                 }
             break;
 
-            case GeneralRegister:
+            case Value::GeneralRegister:
                 inst->push_back((int8_t) (*it)->generalRegister());
             break;
 
+            case Value::SpecialRegister:
+            
+            break;
+
+            case Value::String:
+            break;
+
+            case Value::Subroutine:
+            break;
+            
             default:
             break;
         }
     }
 
-    return inst;
+    return;
 }
 // TODO: Replace with binary search
-const Operation &Instruction::findOpcode(const string &name) const
+const Operation *Instruction::findOpcode(const string &name)
 {
-    Operation *op = instruction_set[0];
+    Operation *op = instruction_set;
     for (register int i = 0; i < INSTRUCTION_SET_SIZE; i++, op++) {
         if (name == instruction_set[i].op_name)
             return instruction_set[i];

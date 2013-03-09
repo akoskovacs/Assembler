@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <limits>
+#include <cassert>
+
 using namespace ast;
 
 Value::Value()
@@ -47,6 +49,8 @@ Value &Value::setGeneralRegister(int id)
     return *this;
 }
 
+Value &Value::setSpecialRegister(
+
 int Value::integer()
 {
     assert(m_type != Integer); 
@@ -59,9 +63,9 @@ const char *Value::string()
     return m_value.v_string; 
 }
 
-int Value::generalRegister() 
+int Value::reg() 
 {
-    assert(m_type != GeneralRegister);
+
     return m_value.v_integer; 
 }
 
@@ -71,14 +75,4 @@ bool Value::isRegister()
         return true;
     else
         return false;
-}
-
-void Value::encode(Program &prog)
-{
-    Code &c = prog.code;    
-    switch (m_type) {
-        case Integer:
-        break;
-    }
-
 }

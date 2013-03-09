@@ -7,26 +7,22 @@ char Lexer::copyToText()
 {
     char ch;
     m_text = "";
-    while ((ch = nextChar()) && (isalpha(ch) || ch == '_'))
+    while ((m_stream >> ch) && (std::isalpha(ch) || ch == '_'))
           m_text += ch;
-    return ch;      
+    return ch;
 }
 
-Token Lexer::lex()
+lexer::Token lexer::Lexer::lex()
 {
     char ch;
-    while ((ch = nextChar())) {
-        if (m_stream->eof())
-            return tEof;
-
+    while (m_stream >> ch) {
         if (std::isspace(ch))
             continue;
 
         switch (ch) {
-            char nc;
             // Eat comments
             case ';':
-                while (nextChar() != '\n')
+                while ((m_stream >> ch) && ch != '\n')
                     ;
 
             case '\n':
@@ -43,23 +39,24 @@ Token Lexer::lex()
 
             case '"':
                m_text = "";
-               while ((nc = nextChar()) && nc != '"') 
-                   m_text += nc;
+               while ((m_stream >> ch) && ch != '"') 
+                   m_text += ch;
             return tString;
 
             // Register
             case '%':
-                if ((nc = nextChar()) && nc == 'r') {
-                    m_stream->operator>>(m_integer);
+                if ((m_stream >> ch) && ch == 'r') {
+                    m_stream >> m_integer;
                     return tGeneralReg;
                 } else {
-                    copyToText();
+                    while ((m_stream >> ch)
                     return tSpecialReg;
                 }
+            break;
         }
 
         if (std::isalpha(ch) || ch == '_') {
-            m_stream->putback(ch);
+            m_stream.putback(ch);
             char nc = copyToText();
             if (nc == ':')
                 return tSubName;
@@ -69,15 +66,15 @@ Token Lexer::lex()
 
         if (std::isdigit(ch) || ch == '-' || ch == '+') {
             if (ch == '0') {
-                char nc = nextChar();
-                if (nc == 'x' || nc == 'X') {
+                m_stream >> ch;
+                if (ch == 'x' || ch == 'X') {
                     // Hexadecimal (starting with 0x or 0X)
-                    m_stream->operator>>(std::hex) >> m_integer;
+                    m_stream >> std::hex >> m_integer;
                     return tInteger;
-                } else if (std::isdigit(nc)) {
+                } else if (std::isdigit(ch)) {
                     // Octal (starting with zero and than other digits)
-                    m_stream->putback(nc);
-                    m_stream->operator>>(std::oct) >> m_integer;
+                    m_stream.putback(ch);
+                    m_stream >> std::oct >> m_integer;
                     return tInteger;
                 } else {
                     // Just a zero
@@ -87,8 +84,8 @@ Token Lexer::lex()
                 }
             }
             // Decimal
-            m_stream->putback(ch);
-            m_stream->operator>>(m_integer);
+            m_stream.putback(ch);
+            m_stream >> m_integer;
             return tInteger;
         }
     }

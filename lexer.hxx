@@ -20,28 +20,21 @@ namespace lexer {
     class Lexer 
     {
     public:
-        explicit Lexer(std::istream *stream = &std::cin) 
+        explicit Lexer(std::istream &stream = std::cin) 
             : m_stream(stream), m_currentLine(1) {}
    
-        Token lex();
+        Token lex() const;
 
-        const std::string &text() { return m_text; }
-        int integer() { return m_integer; }
-        int currentLine() { return m_currentLine; }
+        std::string &text() { return m_text; }
+        int integer() const { return m_integer; }
+        int currentLine() const { return m_currentLine; }
 
-        void setStream(std::istream *stream)
-        { m_currentLine = 1; m_stream = stream; }
-        std::istream *stream() { return m_stream; }
+        std::istream &stream() { return m_stream; }
 
     private:
         char copyToText();
-        inline char nextChar() {
-            char ch;
-            m_stream->get(ch);
-            return ch;
-        }
 
-        std::istream *m_stream;
+        std::istream &m_stream;
         int m_currentLine;
         Token m_currentToken;
         int m_integer;

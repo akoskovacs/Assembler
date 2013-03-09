@@ -7,4 +7,11 @@ set(SOURCES
     opcodes.cxx
     parser.cxx)
 
-add_executable(asm ${SOURCES})
+set(HEADERS
+	ast.hxx
+	lexer.hxx
+	linker.hxx
+	opcodes.hxx
+	parser.hxx)
+	
+add_executable(asm ${SOURCES} ${HEADERS})

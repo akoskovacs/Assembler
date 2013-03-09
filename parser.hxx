@@ -2,32 +2,30 @@
 #define PARSER_HXX
 
 #include <iostream>
+#include <memory>
 
 #include "lexer.hxx"
 #include "ast.hxx"
-
-using namespace std;
-using namespace ast;
 
 namespace parser {
     class Parser
     {
     public:
         explicit Parser(lexer::Lexer *lex = 0) 
-            : m_lexer(lex) { m_program = new Program; }
+            : m_lexer(lex) { m_program = new ast::Program; }
 
         ast::Program *parse();
     
     private:
-        Mnemonic *parseMnemonic();
-        Subroutine *parseSubroutine();
+        ast::Mnemonic *parseMnemonic();
+        ast::Subroutine *parseSubroutine();
 
         lexer::Token nextToken() {
             return m_current_token = m_lexer->lex();
         }
 
         lexer::Token m_current_token;
-        auto_ptr<lexer::Lexer> m_lexer;
+        std::auto_ptr<lexer::Lexer> m_lexer;
         ast::Program *m_program;
     }; // class Parser
 } // namespace parser

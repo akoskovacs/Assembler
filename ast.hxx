@@ -15,38 +15,44 @@
 
 #include "opcodes.hxx"
 
-using namespace std;
+#if _MSC_VER
+    typedef unsigned char uint8_t;
+    typedef signed char int8_t;
+    typedef unsigned __int16 uint16_t;
+    typedef unsigned __int16 int16_t;
+    typedef unsigned __int32 uint32_t;
+    typedef unsigned __int32 int32_t;
+#endif
 
 namespace ast {
     struct Label;
     struct Mnemonic;
-    const int REGISTER_COUNT = 13;
-
-    enum ValueType {
-        Nil,
-        String,
-        Integer,
-        GeneralRegister,
-        SpecialRegister,
-        Subroutine
-    };
 
     class Value
     {
     public:
+         enum ValueType {
+            Nil,
+            String,
+            Integer,
+            GeneralRegister,
+            SpecialRegister,
+            Subroutine
+        };
+
         Value();
         Value(int);
         Value(const std::string &);
         Value(const char *);
         Value &setString(const char *);
-        Value &setGeneralRegister(int);
+        Value &setRegister(int);
         Value &setInteger(int);
         Value &setType(ValueType type) { m_type = type; return *this; }
         Value &setSubroutine(const char *);
        
         int integer();
         const char *string();
-        int generalRegister();
+        int reg();
         const char *subroutine();
         char *toBytes();
         bool isRegister();
@@ -56,7 +62,7 @@ namespace ast {
         ValueType m_type;
         union {
             const char *v_string;
-            uint16_t v_integer;
+            int         v_integer;
         } m_value;
     };
 
@@ -72,15 +78,42 @@ namespace ast {
         vector<Value *> *arguments;
     };
 
-    class Code
+    class Buffer
     {
     public:
-        Code();
+        size_t pushData(char *ptr, size_t size) {
+            size_t s = getPointer();
+            m_buffer.assign(ptr, ptr+size);
+            return s;
+        }
+        Buffer &operator <<(char c) {
+            m_buffer.push_back(c);
+        }
+
+        Buffer &operator <<(int i) {
+            char *pi = (char *)&i;
+            pushData(pi, sizeof(int));
+        }
+        size_t getPointer() { return m_buffer.size(); }
+    private:
+        vector<char> m_buffer;
+    };
+
+
+    class CodeBuffer
+    {
+    public:
         void addInstruction(opcode::Operation &, vector <Value *> &);
         size_t getCodePointer() { codeBuffer.size(); }
+
+        CodeBuffer &operator <<(opcode::Operation &);
+        CodeBuffer &operator <<(char);
+        CodeBuffer &operator <<(int);
+        CodeBuffer &operator <<(const std::string &);
+
     private:
         vector<char> codeBuffer;
-    }
+    };
 
     struct Subroutine
     {
@@ -90,7 +123,8 @@ namespace ast {
         Program *program;
         string name;
         vector<Label *> &labels;
-        size_t codePointer
+        size_t codePointer;
+        size_t subSize;
     };
 
     struct Label
