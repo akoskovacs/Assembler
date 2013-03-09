@@ -43,7 +43,6 @@ vector<char> *Instruction::encode(Mnemonic *mne)
 
     inst->push_back(opcode);
     vector<Value *>::const_iterator it;
-    Converter long_arg;
     for (it = args->begin(); it != args->end(); it++) {
         switch ((*it)->type()) {
             case Integer:
@@ -68,12 +67,12 @@ vector<char> *Instruction::encode(Mnemonic *mne)
     return inst;
 }
 // TODO: Replace with binary search
-int Instruction::findOpcode(const string &name)
+const Operation &Instruction::findOpcode(const string &name) const
 {
     Operation *op = instruction_set[0];
     for (register int i = 0; i < INSTRUCTION_SET_SIZE; i++, op++) {
         if (name == instruction_set[i].op_name)
-            return i;
+            return instruction_set[i];
     }
     throw i; // TODO: Normal exceptions
 }

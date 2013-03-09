@@ -72,3 +72,13 @@ bool Value::isRegister()
     else
         return false;
 }
+
+void Value::encode(Program &prog)
+{
+    Code &c = prog.code;    
+    switch (m_type) {
+        case Integer:
+        break;
+    }
+
+}

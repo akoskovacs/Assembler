@@ -13,6 +13,8 @@
 #include <cstddef>
 #include <cassert>
 
+#include "opcode.hxx"
+
 using namespace std;
 
 namespace ast {
@@ -46,6 +48,7 @@ namespace ast {
         const char *string();
         int generalRegister();
         const char *subroutine();
+        char *toBytes();
         bool isRegister();
         ValueType type() { return m_type; }
 
@@ -59,11 +62,8 @@ namespace ast {
 
     struct Mnemonic 
     {
-        Mnemonic(const string &name, vector<Value *> *args, Label *label) {
-            this->name = name;
-            arguments = args;
-            this->label = label;
-        }
+        Mnemonic(const string &name, vector<Value *> *args, Label *label)
+        { }
         // TODO: Destructors
 
         bool hasLabel() { return (label != (Label *)0) ? true : false; }
@@ -72,36 +72,44 @@ namespace ast {
         vector<Value *> *arguments;
     };
 
+    class Code
+    {
+    public:
+        Code();
+        void addInstruction(opcode::Operation &, vector <Value *> &);
+        size_t getCodePointer() { codeBuffer.size(); }
+    private:
+        vector<char> codeBuffer;
+    }
+
     struct Subroutine
     {
-        Subroutine(const string &name, vector<Mnemonic *> *mnemonics) {
-            this->name = name;
-            this->mnemonics = mnemonics;
-        }
+        Subroutine(Program *prog, vector<Label *> &labels, const string &name, size_t addr) 
+            : program(program), labels(labels), name(name), codePointer(addr) { }
 
+        Program *program;
         string name;
-        vector<Mnemonic *> *mnemonics;
+        vector<Label *> &labels;
+        size_t codePointer
     };
 
     struct Label
     {
-        Label(const string &name)
-            : name(name)
-        {
-//            if (prog != 0)
-//                parent->labels->push_back(prog);
-        }
+        Label(Subroutine *sub, const string &name, size_t addr)
+            : subroutine(sub), name(name), codePointer(addr) { }
 
+        Subroutine *subroutine;
         string name; 
+        size_t codePointer;
     };
 
     struct Program
     {
-       Program(vector<Subroutine *> *subs = 0)
-       { subroutines = subs; }
+       Program() { }
 
-       vector<Label *> *labels;
-       vector<Subroutine *> *subroutines;
+       Code code;
+       vector<Subroutine *> subroutines;
+       vector<char *> strings;
     };
 } // namespace parser
 

@@ -1,100 +1,65 @@
 #include "parser.hxx"
+#include "opcodes.hxx"
+#include <string>
+#include <map>
 
 using namespace ast;
 using namespace lexer;
 
 Program *Parser::parse()
 {
-    vector<parser::Subroutine *> *subs;
     if (m_lexer == 0)
         return;
 
     while (nextToken() == tSubName) {
         Subroutine *sub = parseSubroutine();
         if (sub != 0)
-            subs->push_back(sub);
+            subroutines.push_back(sub);
     }
-    m_program->subroutines = subs;
     return m_program;
 }
 
 Subroutine *Parser::parseSubroutine()
 {
-    std::vector<Mnemonic *> *instructions = new std::vector<Mnemonic *>;
+    std::vector<char> instructions;
+    std::vector<Label *> labels;
     std::string sub_name;
-    Label *label = 0;
+    Label *l;
+    Subroutine *s =
+        new Subroutine(this, labels, sub_name, code.getCodePointer());
     if (m_current_token == tSubName) {
         sub_name = m_lexer.text();
         while (nextToken() != tSubName) {
             switch (m_current_token) {
                 case tLabel:
-                    label = new Label(m_lexer.text());
+                l = new Label(s, m_lexer->text(), code.getCodePointer());
+                labels.push_back(l);
                 continue;
 
                 case tMnemonic:
-                    Mnemonic *tmp = parseMnemonic();
-                    if (label != 0) {
-                        tmp->setLabel(label);
-                        m_program->labels->push_back(label);
-                        label = 0;
-                    }
-
-                    instructions->push_back(tmp);
+                instructions = parseMnemonic(s);
                 break;
             }
         }
-    } else {
-        return (Subroutine *)0;
     }
+    return s;
 }
 
-Mnemonic *Parser::parseMnemonic()
+void Parser::parseMnemonic(Subroutine *s)
 {
-    std::string mne_name;
-    std::vector<Value *> *args = new std::vector<Value *>;
     if (m_current_token == tMnemonic) {
-        mne_name = m_lexer->text();
-        Token tok;
-        while ((tok = nextToken()) && tok != '\n')
-        switch (tok) {
-            case tMnemonic: 
-                Value *val = Value();
-                if (mne_name == "call") {
-                    val->setSubroutine(m_lexer->text());
-                // Is it a jump instruction?
-                } else if (mne_name[0] == 'j') {
-                    val->setLabel(m_lexer->text());
-                } else {
-                    continue; // TODO: Handle nop and ret
-                }
+        Operation op = opcode::findOpcode(m_lexer->text());
+        while (nextToken() != '\n') {
+            switch (m_current_token) {
+                case lexer::tInteger:
+                    
+                break;
 
-                args->push_back(val);
-                return new Mnemonic(mne_name, args);
-            break;
+                case lexer::tGeneralReg:
 
-            case tInteger:
-                args->push_back(new Value(m_lexer->integer()));
-            break; 
+                break;
 
-            case tString:
-                args->push_back(new Value(m_lexer->text()));
-            break; 
-
-            case tColon:
-            continue;
-
-            case tGeneralReg:
-                Value *val = Value();
-                val->setGeneralRegister(m_lexer->integer());
-                args->push_back(val);
-            break; 
-
-            case tLabel:
-            continue; // TODO: Resolve the label
+            }
         }
-
-        return new Mnemonic(mne_name, args);
-    } else {
-        return (Mnemonic *)0;
     }
 }
