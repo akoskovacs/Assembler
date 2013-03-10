@@ -8,14 +8,16 @@
 namespace linker {
     class Linker {
     public:
-        Linker(ast::Program *);
+        Linker();
         void addProgram(ast::Program *);
         friend std::ostream &operator <<(std::ostream &, const Linker &);
         void link();
     
     private:
         std::vector<Program *> m_programs;
-        vector<uint8_t> m_bytecode;
+        DataBuffer m_rodata;
+        DataBuffer m_data;
+        CodeBuffer m_text;
     }; // class Linker
 } // namespace linker
 

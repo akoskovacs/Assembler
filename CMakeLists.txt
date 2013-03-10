@@ -11,7 +11,8 @@ set(HEADERS
 	ast.hxx
 	lexer.hxx
 	linker.hxx
-	opcodes.hxx
+    opcodes.hxx
+    gencode.cxx
 	parser.hxx)
 	
 add_executable(asm ${SOURCES} ${HEADERS})

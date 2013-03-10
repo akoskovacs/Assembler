@@ -4,27 +4,30 @@
 
 #include "opcodes.hxx"
 #include "ast.hxx"
+#include "linker.hxx"
 
 using namespace opcode;
 using namespace ast;
 using namespace std;
 
-void encode(Mnemonic *mne)
+void Mnemonic::genCode(Linker &linker)
 {
     int op_ind;
     uint8_t opcode = 0;
-    vector<char> *inst = new vector<char>;
     vector<Value *> *args = mne->arguments;
+    CodeBuffer &code = linker.code();
 
     try {
         op_ind = findOpcode(mne->name);
     } catch (...) {
-        std::cerr << "Error: Instruction \'" << mne->name << "\' is unknown.\n";
+        std::cerr << "Error: Instruction \'"
+                  << mne->name << "\' is unknown.\n";
         return; // TODO: Terminate
     }
 
     if (instruction_set[op_ind].op_args > mne->arguments->size()) {
-        std::cerr << "Error: To many arguments for \'" << mne->name << "\' instruction.\n";
+        std::cerr << "Error: To many arguments for \'"
+                  << mne->name << "\' instruction.\n";
         return; // TODO: Terminate
     }
 
@@ -39,23 +42,17 @@ void encode(Mnemonic *mne)
     else
         opcode |= 0xC0;
 
-    inst->push_back(opcode);
+    code << opcode;
     for (int i = 0; i < 2; i++) {
         switch (args[i]) {
             case Value::Integer:
-                if (instruction_set[op_ind].op_arg_size == 2) {
-                    
-                } else {
-                    inst->push_back((int8_t)(*it)->integer());
+                if (instruction_set[op_ind].op_args > 1) {
+                    code << args[i]->integer();
                 }
             break;
 
-            case Value::GeneralRegister:
-                inst->push_back((int8_t) (*it)->generalRegister());
-            break;
-
-            case Value::SpecialRegister:
-            
+            case Value::Register:
+                code << (uint8_t)args[i]->integer();
             break;
 
             case Value::String:

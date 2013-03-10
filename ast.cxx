@@ -28,51 +28,56 @@ Value::Value(int num)
 
 Value &Value::setString(const char *str) 
 {
-    m_type = String;
+    m_type = Value::String;
     m_value.v_string = str;
     return *this;
 }
 
 Value &Value::setInteger(int num)
 {
-    assert(num > std::numeric_limits<uint16_t>::max);
-    m_type = Integer;
+    m_type = Value::Integer;
     m_value.v_integer = num;
     return *this;
 }
 
-Value &Value::setGeneralRegister(int id)
+Value &Value::setRegister(int reg)
 {
-    assert(id > REGISTER_COUNT || id < 0);
-    m_type = GeneralRegister;
-    m_value.v_integer = id;
+    m_type = Value::Register;
+    m_value.v_integer = reg+3;
     return *this;
 }
 
-Value &Value::setSpecialRegister(
+Value &Value::setRegister(const std::string &reg)
+{
+    m_type = Value::Register;
+    const char *sr = opcode::special_registers;
+    for (int i = 0; *sr; i++) {
+        if (reg == *sr) {
+            m_value.v_integer = i;
+            break;
+        }
+    }
+    return *this;
+}
 
 int Value::integer()
 {
-    assert(m_type != Integer); 
+    assert(m_type != Value::Integer); 
     return m_value.v_integer; 
 }
 
 const char *Value::string()
 {
-    assert(m_type != String); 
+    assert(m_type != Value::String); 
     return m_value.v_string; 
 }
 
 int Value::reg() 
 {
-
     return m_value.v_integer; 
 }
 
 bool Value::isRegister()
 {
-    if (m_type == GeneralRegister || m_type == SpecialRegister)
-        return true;
-    else
-        return false;
+    return mtype == Value::Register;
 }

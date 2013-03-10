@@ -49,7 +49,8 @@ lexer::Token lexer::Lexer::lex()
                     m_stream >> m_integer;
                     return tGeneralReg;
                 } else {
-                    while ((m_stream >> ch)
+                    m_stream.putback(ch);
+                    m_stream >> m_text;
                     return tSpecialReg;
                 }
             break;

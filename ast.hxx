@@ -35,8 +35,7 @@ namespace ast {
             Nil,
             String,
             Integer,
-            GeneralRegister,
-            SpecialRegister,
+            Register,
             Subroutine
         };
 
@@ -46,6 +45,7 @@ namespace ast {
         Value(const char *);
         Value &setString(const char *);
         Value &setRegister(int);
+        Value &setRegister(const std::string &);
         Value &setInteger(int);
         Value &setType(ValueType type) { m_type = type; return *this; }
         Value &setSubroutine(const char *);
@@ -56,6 +56,7 @@ namespace ast {
         const char *subroutine();
         char *toBytes();
         bool isRegister();
+        bool isIntermediate() { return !isRegister(); }
         ValueType type() { return m_type; }
 
     private:
@@ -68,63 +69,26 @@ namespace ast {
 
     struct Mnemonic 
     {
-        Mnemonic(const string &name, vector<Value *> *args, Label *label)
+        Mnemonic(const string &name, vector<Value *> *args, Label *label = 0)
+            : name(name), arguments(args), label(label)
         { }
-        // TODO: Destructors
 
-        bool hasLabel() { return (label != (Label *)0) ? true : false; }
+        void genCode(CodeBuffer &code, DataBuffer &data);
         Label *label;
-        string name;
-        vector<Value *> *arguments;
-    };
-
-    class Buffer
-    {
-    public:
-        size_t pushData(char *ptr, size_t size) {
-            size_t s = getPointer();
-            m_buffer.assign(ptr, ptr+size);
-            return s;
-        }
-        Buffer &operator <<(char c) {
-            m_buffer.push_back(c);
-        }
-
-        Buffer &operator <<(int i) {
-            char *pi = (char *)&i;
-            pushData(pi, sizeof(int));
-        }
-        size_t getPointer() { return m_buffer.size(); }
-    private:
-        vector<char> m_buffer;
-    };
-
-
-    class CodeBuffer
-    {
-    public:
-        void addInstruction(opcode::Operation &, vector <Value *> &);
-        size_t getCodePointer() { codeBuffer.size(); }
-
-        CodeBuffer &operator <<(opcode::Operation &);
-        CodeBuffer &operator <<(char);
-        CodeBuffer &operator <<(int);
-        CodeBuffer &operator <<(const std::string &);
-
-    private:
-        vector<char> codeBuffer;
+        std::string name;
+        std::vector<Value *> &arguments;
     };
 
     struct Subroutine
     {
-        Subroutine(Program *prog, vector<Label *> &labels, const string &name, size_t addr) 
-            : program(program), labels(labels), name(name), codePointer(addr) { }
+        Subroutine(Program *prog, const string *name
+            , std::vector<Mnemonic *> *mne, std::vector<Label *> *labels) 
+            : program(program), name(name), mnemonics(mne), labels(labels) { }
 
         Program *program;
-        string name;
-        vector<Label *> &labels;
-        size_t codePointer;
-        size_t subSize;
+        std::string *name;
+        std::vector<Mnemonic *> *mnemonics;
+        std::vector<Label *> *labels;
     };
 
     struct Label
@@ -133,17 +97,19 @@ namespace ast {
             : subroutine(sub), name(name), codePointer(addr) { }
 
         Subroutine *subroutine;
-        string name; 
+        std::string name; 
         size_t codePointer;
     };
 
     struct Program
     {
-       Program() { }
-
-       Code code;
-       vector<Subroutine *> subroutines;
-       vector<char *> strings;
+       void genCode(CodeBuffer &code, DataBuffer &data) {
+           std::vector<Subroutine *>::iterator it;
+           for (it = subroutines.begin(); it != subroutines.end(); it++) {
+               it->genCode(code, data);
+           }
+       }
+       std::vector<Subroutine *> subroutines;
     };
 } // namespace parser
 

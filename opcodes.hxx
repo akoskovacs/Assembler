@@ -51,9 +51,13 @@ namespace opcode {
         ADD = 0x1, AND , BR , CALL , CMP , DEC , DIV , INC
         , MUL , MOD , MOV , NOP , OR , POP , PUSH , RET
         , SL , SR , SUB , XOR
-    };
+   };
 
-    static const Operation instruction_set[] = {
+   enum SpecialRegisters {
+        SP, IP
+   };
+
+   static const Operation instruction_set[] = {
         { "add",    Opcode::ADD,  FA_Mem|SA_Any, 2, 4, 4 },
         { "and",    Opcode::AND,  FA_Mem|SA_Any, 2, 2, 5 },
         { "br",     Opcode::BR,   FA_Mem|SA_Mem, 4, 4, 2 },
